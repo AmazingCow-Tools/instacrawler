@@ -13,31 +13,25 @@
 ################################################################################
 ## Imports                                                                    ##
 ################################################################################
+## Python
 import os.path;
 import os;
+import pdb;
 import time
 import urllib;
+import threading;
+## Selenium
 from selenium import webdriver
-
-
-################################################################################
-## Constants                                                                  ##
-################################################################################
-class Constants:
-    Button_LoadMore       = "._1cr2e._epyes";
-    Div_MainPagePhotoGrid = "_70iju";
-    Div_MainPagePhoto     = "._mck9w._gvoze._f2mse";
-    Div_Photo             = "_4rbun";
-    Div_Video             = "_qzesf";
+## BS4
+from bs4 import BeautifulSoup
+## AmazingCow libs
+import bs4_helpers;
+import random;
 
 
 ################################################################################
 ## Globals                                                                    ##
 ################################################################################
-class Globals:
-    driver    = None;
-    users     = [];
-    curr_user = None;
 
 
 ################################################################################
@@ -46,156 +40,312 @@ class Globals:
 def log(*args):
     print " ".join(map(str, args));
 
-def scroll_down(delay=1.5):
-    Globals.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+################################################################################
+## Driver Functions                                                            ##
+################################################################################
+def driver_scroll_down(driver, delay=0.5):
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
     time.sleep(delay);
 
-def get_doc_height():
-    return Globals.driver.execute_script("return document.body.scrollHeight")
+def driver_get_doc_height(driver):
+    return driver.execute_script("return document.body.scrollHeight")
 
-def build_save_path(src):
-    if(src is None):
-        return None;
-
-    path = os.path.basename(src);
-    path = os.path.join(Globals.curr_user, path);
-    return path;
-
-def exists(path):
-    return os.path.exists(path);
-
-
-################################################################################
-## Downloaders                                                                ##
-################################################################################
-def get_photo_info():
-    try:
-        photo = Globals.driver.find_element_by_class_name(Constants.Div_Photo);
-        img   = photo.find_element_by_tag_name("img");
-        src   = img.get_attribute("src");
-
-        return src;
-
-    except:
-        return None;
-
-def get_video_info():
-    try:
-        movie = Globals.driver.find_element_by_class_name(Constants.Div_Video);
-        video = movie.find_element_by_tag_name("video");
-        src   = video.get_attribute("src");
-
-        return src;
-
-    except:
-        return None;
-
-
-################################################################################
-## Script                                                                     ##
-################################################################################
-def scrap(username):
-    Globals.curr_user = username;
-    log("Username: ", username);
-
-    Globals.driver.get("https://www.instagram.com/{0}/".format(username));
-    os.system("mkdir -p {0}".format(username));
-
+def driver_load_main_page(driver):
+    pass;
     ## Reach the [Load More] Button and click it...
-    scroll_down();
+    driver_scroll_down(driver);
 
-    load_more = Globals.driver.find_element_by_css_selector(
-        Constants.Button_LoadMore
-    );
+    load_more = driver.find_element_by_css_selector("._1cr2e._epyes");
     load_more.click();
 
     ## Keep going down to load all photos...
-    height = get_doc_height();
-    tries  = 3; ## COWTODO(n2omatt): This is ugly...
+    height = driver_get_doc_height(driver);
+    tries  = 2; ## COWTODO(n2omatt): This is ugly...
     while(tries >= 0):
         log("--> Scrolling down...");
-        scroll_down(0.5);
+        driver_scroll_down(driver, 0.5);
 
-        curr_height = get_doc_height();
+        curr_height = driver_get_doc_height(driver);
         if(curr_height != height):
             height = curr_height;
         else:
             tries -= 1;
 
 
-    urls_list = [];
+def driver_navigate(driver, url):
+    delay = random.uniform(0.5, 4);
+    log("--> Sleeping: {0}".format(delay));
 
-    ## Get all Photo grid divs...
-    log("--> Getting photos grid div.");
-    photo_grid_div = Globals.driver.find_elements_by_class_name(
-        Constants.Div_MainPagePhotoGrid
-    );
-    time.sleep(2);
+    time.sleep(delay);
 
-    ## Get all urls for individual photo pages...
-    log("--> Getting photos divs.");
-    for photo_grid_div in photo_grid_div:
-        photo_divs = photo_grid_div.find_elements_by_css_selector(
-            Constants.Div_MainPagePhoto
-        );
+    driver.get(url);
 
-        log("----> Getting photos url.");
-        for photo_div in photo_divs:
-            a   = photo_div.find_element_by_tag_name("a");
-            url = a.get_attribute("href");
-
-            urls_list.append(url);
-            log("------> Urls count:", len(urls_list));
+def driver_get_html(driver):
+    element = driver.find_element_by_tag_name("html");
+    return element.get_attribute("innerHTML");
 
 
-    ## Go to each photo page and download it...
-    log("--> Downloading photos...");
-    for url in urls_list:
-        log("----> Url:", url);
-        Globals.driver.get(url);
+################################################################################
+## Download Funtions                                                          ##
+################################################################################
+def download_medias(username, url_list):
+    error_urls = [];
+    for i in xrange(len(url_list)):
+        url = url_list[i];
 
-        photo_url = get_photo_info();
-        video_url = get_video_info();
-        download_url = None;
+        log("--> Downloading media {0} - {1}".format(i, len(url_list)));
+        log("    URL: {0}".format(url));
 
-        photo_save_path    = build_save_path(photo_url);
-        video_save_path    = build_save_path(video_url);
-        download_save_path = None;
-
-        ## Try to download the photo
-        ##    If fail, means that we have a video instead
-        if(photo_save_path is not None and not exists(photo_save_path)):
-            download_url       = photo_url;
-            download_save_path = photo_save_path;
-
-        ## Try to download the video...
-        ##    If it fails, something really bad happened...
-        elif(video_save_path is not None and not exists(video_save_path)):
-            download_url       = video_url;
-            download_save_path = video_save_path;
-
-        if(download_save_path is None):
-            log("----> Stopping...");
-            continue;
+        save_path = build_save_path(username, url);
+        if(exists(save_path)):
+            log("    Already saved  at: {0}".format(save_path));
+            break;
 
         try:
-            urllib.urlretrieve(download_url, download_save_path);
+            urllib.urlretrieve(url, save_path);
         except:
+            log("[ERROR] Falied to download media.");
+            error_urls.append(url);
             continue;
-        time.sleep(4);
+
+        log("    Saved at: {0}".format(save_path));
+
+    return error_urls;
+
+
+################################################################################
+## Filesystem Functions                                                       ##
+################################################################################
+def create_output_dir(username):
+    os.system("mkdir -p {0}".format(username));
+
+def exists(path):
+    return os.path.exists(path);
+
+def build_save_path(name, src):
+    if(src is None):
+        return None;
+
+    path = os.path.basename(src);
+    path = os.path.join(name, path);
+
+    return path;
+
+def dump_errors(username, urls, download_urls):
+    f = open(build_save_path(username, "errors.txt"), "w");
+    for url in urls:
+        f.write("Url: {0}\m".format(url));
+
+    for url in download_urls:
+        f.write("Media: {0}\m".format(url));
+
+    f.close();
+
+
+################################################################################
+## Scrap Functions                                                            ##
+################################################################################
+def scrap_media_pages(driver, url_list):
+    photo_urls = [];
+    video_urls = [];
+
+    error_urls = [];
+
+    for i in xrange(len(url_list)):
+        url = url_list[i];
+        url = "https://www.instagram.com" + url;
+
+        log("--> Scrapping media page ({0} - {1})".format(i+1, len(url_list)));
+        log("    URL: {0}".format(url));
+
+        driver_navigate(driver, url);
+
+        html = driver_get_html(driver);
+        soup = BeautifulSoup(html, "lxml");
+
+        ## Check if it's a photo...
+        tag = bs4_helpers.find_first_class(soup, "_2di5p");
+        src = bs4_helpers.optional_attr(tag, "src");
+
+        if(src is not None):
+            photo_urls.append(src);
+            log("-----> Found photo - Count({0})".format(len(photo_urls)));
+            continue;
+
+        ## If fails, check if it's video...
+        tag = bs4_helpers.find_first_class(soup, "_l6uaz");
+        src = bs4_helpers.optional_attr(tag, "src");
+
+        if(src is not None):
+            video_urls.append(src);
+            log("-----> Found video - Count({0})".format(len(video_urls)));
+            continue;
+
+        ## If both tries failed, we have a "not expected" situation
+        ## save it to debug later...
+        error_urls.append(url);
+        continue;
+
+    return {
+        "photos" : photo_urls,
+        "videos" : video_urls,
+        "errors" : error_urls
+    };
+
+def scrap_main_page(driver, username):
+    log("Username: ", username);
+
+    create_output_dir(username);
+
+    driver_navigate(driver, "https://instagram.com/{0}".format(username));
+    driver_load_main_page(driver);
+
+    html = driver_get_html(driver);
+    soup = BeautifulSoup(html, "lxml");
+
+    urls_list = [];
+
+    ## Get all media links on main page...
+    log("--> Getting photos grid div.");
+
+    media_divs = bs4_helpers.find_all_class(soup, "_mck9w _gvoze _f2mse");
+    for media_div in media_divs:
+        tag_a = bs4_helpers.find_first_tag(media_div, "a");
+        url   = bs4_helpers.optional_attr (tag_a, "href");
+
+        urls_list.append(url);
+
+    log("    Found {0} urls...".format(len(urls_list)));
+
+    return urls_list;
+
+
+################################################################################
+## Script                                                                     ##
+################################################################################
+def scrap2(*args,  **kwargs):
+    username = args[0];
+    print("Username: {0}".format(username));
+    time.sleep(random.uniform(4, 10));
+    print("----> Username: {0}".format(username));
+
+
+
+def scrap(*args,  **kwargs):
+    username = args[0];
+
+    driver = webdriver.Chrome();
+    driver.set_window_position(-1000, -1000);
+
+    try:
+        media_pages_urls = scrap_main_page(driver, username);
+        media_urls_dict  = scrap_media_pages(driver,  media_pages_urls);
+
+        download_medias(username, media_urls_dict["photos"]);
+
+        download_errors = download_medias(media_urls_dict["videos"]);
+        dump_errors(
+            username,
+            media_urls_dict["errors"],
+            download_errors
+        );
+
+    except:
+        pass;
+
+    finally:
+        driver.quit()
+
+
+def make_thread():
+    # lock = threading.Lock();
+    # with lock:
+    if(len(Globals.users) == 0):
+        return None;
+
+    name = Globals.users[0];
+    del Globals.users[0];
+
+    return threading.Thread(
+        name   =  name,
+        target = scrap,
+        args   = (name,)
+    );
+
+
+class Globals:
+    users     = [];
+    threads   = [];
+    threads_max_count = 8;
+
+
+def make_threads():
+    ## COWNOTE(n2omatt): As we can see... I don't "know" multi thread stuff yet..
+    lock = threading.Lock();
+    with lock:
+        to_delete = [];
+        for i in range(len(Globals.threads)):
+            t = Globals.threads[i];
+
+            if(not t.is_alive()):
+                to_delete.append(i);
+
+        for i in to_delete:
+            del Globals.threads[i];
+
+        for i in range(Globals.threads_max_count - len(Globals.threads)):
+            t = make_thread();
+            if(t is None):
+                break;
+
+            Globals.threads.append(t);
+
+            t.start();
+            ##t.join ();
+
 
 
 def main():
-    Globals.driver = webdriver.Chrome('../ext/chromedriver');
-
     for item in open("list").readlines():
         Globals.users.append(item.replace("\n",""));
 
-    print Globals.users;
-    for username in Globals.users:
-        scrap(username);
-        time.sleep(20);
 
-    Globals.driver.quit()
+    while(True):
+        make_threads();
+        # t1 = make_thread();
+        # t2 = make_thread();
+        # t3 = make_thread();
+        # t4 = make_thread();
+        # t5 = make_thread();
+        # t6 = make_thread();
+        # t7 = make_thread();
+        # t8 = make_thread();
+        #
+        # t1.start();
+        #
+        # if(t2 is not None): t2.start();
+        # if(t3 is not None): t3.start();
+        # if(t4 is not None): t4.start();
+        # if(t5 is not None): t5.start();
+        # if(t6 is not None): t6.start();
+        # if(t7 is not None): t7.start();
+        # if(t8 is not None): t8.start();
+        #
+        #
+        # t1.join();
+        #
+        # if(t2 is not None): t2.join();
+        # if(t3 is not None): t3.join();
+        # if(t4 is not None): t4.join();
+        # if(t5 is not None): t5.join();
+        # if(t6 is not None): t6.join();
+        # if(t7 is not None): t7.join();
+        # if(t8 is not None): t8.join();
+
+        if(len(Globals.users) == 0):
+            break;
+
+
 
 main();
