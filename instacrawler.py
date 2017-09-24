@@ -230,14 +230,6 @@ def scrap_main_page(driver, username):
 ################################################################################
 ## Script                                                                     ##
 ################################################################################
-def scrap2(*args,  **kwargs):
-    username = args[0];
-    print("Username: {0}".format(username));
-    time.sleep(random.uniform(4, 10));
-    print("----> Username: {0}".format(username));
-
-
-
 def scrap(*args,  **kwargs):
     username = args[0];
 
