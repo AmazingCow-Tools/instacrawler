@@ -135,10 +135,10 @@ def build_save_path(name, src):
 def dump_errors(username, urls, download_urls):
     f = open(build_save_path(username, "errors.txt"), "a");
     for url in urls:
-        f.write("Url: {0}\m".format(url));
+        f.write("Url: {0}\n".format(url));
 
     for url in download_urls:
-        f.write("Media: {0}\m".format(url));
+        f.write("Media: {0}\n".format(url));
 
     f.close();
 
