@@ -242,7 +242,7 @@ def scrap(*args,  **kwargs):
 
         download_medias(username, media_urls_dict["photos"]);
 
-        download_errors = download_medias(media_urls_dict["videos"]);
+        download_errors = download_medias(username, media_urls_dict["videos"]);
         dump_errors(
             username,
             media_urls_dict["errors"],
