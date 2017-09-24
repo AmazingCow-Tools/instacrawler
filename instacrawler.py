@@ -162,6 +162,7 @@ def scrap_media_pages(driver, url_list):
         log("    URL: {0}".format(url));
 
         driver_navigate(driver, url);
+        db.insert_url(url);
 
         html = driver_get_html(driver);
         soup = BeautifulSoup(html, "lxml");
