@@ -293,7 +293,6 @@ def make_threads():
             Globals.threads.append(t);
 
             t.start();
-            ##t.join ();
 
 
 
@@ -304,35 +303,6 @@ def main():
 
     while(True):
         make_threads();
-        # t1 = make_thread();
-        # t2 = make_thread();
-        # t3 = make_thread();
-        # t4 = make_thread();
-        # t5 = make_thread();
-        # t6 = make_thread();
-        # t7 = make_thread();
-        # t8 = make_thread();
-        #
-        # t1.start();
-        #
-        # if(t2 is not None): t2.start();
-        # if(t3 is not None): t3.start();
-        # if(t4 is not None): t4.start();
-        # if(t5 is not None): t5.start();
-        # if(t6 is not None): t6.start();
-        # if(t7 is not None): t7.start();
-        # if(t8 is not None): t8.start();
-        #
-        #
-        # t1.join();
-        #
-        # if(t2 is not None): t2.join();
-        # if(t3 is not None): t3.join();
-        # if(t4 is not None): t4.join();
-        # if(t5 is not None): t5.join();
-        # if(t6 is not None): t6.join();
-        # if(t7 is not None): t7.join();
-        # if(t8 is not None): t8.join();
 
         if(len(Globals.users) == 0):
             break;
