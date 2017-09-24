@@ -133,7 +133,7 @@ def build_save_path(name, src):
     return path;
 
 def dump_errors(username, urls, download_urls):
-    f = open(build_save_path(username, "errors.txt"), "w");
+    f = open(build_save_path(username, "errors.txt"), "a");
     for url in urls:
         f.write("Url: {0}\m".format(url));
 
