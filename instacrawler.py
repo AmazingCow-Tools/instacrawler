@@ -20,13 +20,15 @@ import pdb;
 import time
 import urllib;
 import threading;
+import sqlite3;
+import random;
 ## Selenium
 from selenium import webdriver
 ## BS4
 from bs4 import BeautifulSoup
 ## AmazingCow libs
 import bs4_helpers;
-import random;
+import db;
 
 
 ################################################################################
@@ -74,6 +76,7 @@ def driver_load_main_page(driver):
             height = curr_height;
         else:
             tries -= 1;
+
 
 
 def driver_navigate(driver, url):
@@ -227,10 +230,6 @@ def scrap_main_page(driver, username):
 
     return urls_list;
 
-
-################################################################################
-## Script                                                                     ##
-################################################################################
 def scrap(*args,  **kwargs):
     username = args[0];
 
@@ -251,12 +250,16 @@ def scrap(*args,  **kwargs):
         );
 
     except:
+        ## COWTODO(n2omatt): What we gonna do to handle errors???
         pass;
 
     finally:
         driver.quit()
 
 
+################################################################################
+## Thread Functions                                                           ##
+################################################################################
 def make_thread():
     # lock = threading.Lock();
     # with lock:
@@ -296,9 +299,11 @@ def make_threads():
             t.start();
 
 
-
+################################################################################
+## Script                                                                     ##
+################################################################################
 def main():
-    for item in open("list").readlines():
+    for item in open("list2").readlines():
         Globals.users.append(item.replace("\n",""));
 
 
@@ -307,7 +312,5 @@ def main():
 
         if(len(Globals.users) == 0):
             break;
-
-
 
 main();
