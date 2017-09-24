@@ -32,6 +32,10 @@ import random;
 ################################################################################
 ## Globals                                                                    ##
 ################################################################################
+class Globals:
+    users     = [];
+    threads   = [];
+    threads_max_count = 8;
 
 
 ################################################################################
@@ -272,13 +276,6 @@ def make_thread():
         target = scrap,
         args   = (name,)
     );
-
-
-class Globals:
-    users     = [];
-    threads   = [];
-    threads_max_count = 8;
-
 
 def make_threads():
     ## COWNOTE(n2omatt): As we can see... I don't "know" multi thread stuff yet..
