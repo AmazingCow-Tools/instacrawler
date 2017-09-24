@@ -157,7 +157,6 @@ def scrap_media_pages(driver, url_list):
 
     for i in xrange(len(url_list)):
         url = url_list[i];
-        url = "https://www.instagram.com" + url;
 
         log("--> Scrapping media page ({0} - {1})".format(i+1, len(url_list)));
         log("    URL: {0}".format(url));
@@ -217,7 +216,11 @@ def scrap_main_page(driver, username):
         tag_a = bs4_helpers.find_first_tag(media_div, "a");
         url   = bs4_helpers.optional_attr (tag_a, "href");
 
-        urls_list.append(url);
+        fullurl = "https://www.instagram.com" + url;
+        if(db.exists_url(fullurl)):
+            continue;
+
+        urls_list.append(fullurl);
 
     log("    Found {0} urls...".format(len(urls_list)));
 
