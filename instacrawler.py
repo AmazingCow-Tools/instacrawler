@@ -56,7 +56,6 @@ def driver_get_doc_height(driver):
     return driver.execute_script("return document.body.scrollHeight")
 
 def driver_load_main_page(driver):
-    pass;
     ## Reach the [Load More] Button and click it...
     driver_scroll_down(driver);
 
