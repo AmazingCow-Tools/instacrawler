@@ -1,4 +1,7 @@
-
+################################################################################
+## Imports                                                                    ##
+################################################################################
+## Python
 import sqlite3;
 
 
@@ -14,26 +17,11 @@ def _open_db():
     return con;
 
 
-def exists_url(url):
-    con = _open_db();
-    cur = con.cursor();
+def db_exists_url(url):
+    return False;
 
-    cur.execute("SELECT url FROM MediaPageUrls WHERE url = '{0}'".format(url));
-    data = cur.fetchall();
+def db_insert_media_url(url):
+    return None;
 
-    con.close();
-
-    return len(data) != 0;
-
-
-def insert_url(url):
-    if(exists_url(url)):
-        return;
-
-    con = _open_db();
-    cur = con.cursor();
-
-    cur.execute("INSERT INTO MediaPageUrls (url) VALUES ('{0}')".format(url));
-
-    con.commit();
-    con.close ();
+def db_insert_url(url):
+    return None;
