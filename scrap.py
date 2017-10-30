@@ -25,6 +25,7 @@
 import os;
 import urllib;
 import pdb;
+import random;
 ## BS4
 from bs4 import BeautifulSoup
 ## instacrawler
@@ -84,6 +85,7 @@ def _scrap_main_page(driver, username):
     media_divs = bs4_helpers.find_all_class(soup, "_mck9w _gvoze _f2mse");
     log.D("[SCRAP] Found {0} media divs", len(media_divs));
 
+    random.shuffle(media_divs);
     for media_div in media_divs:
         tag_a = bs4_helpers.find_first_tag(media_div, "a");
         url   = bs4_helpers.optional_attr (tag_a, "href");
@@ -107,6 +109,7 @@ def _scrap_media_pages(driver, url_list):
     video_urls = [];
     error_urls = [];
 
+    random.shuffle(url_list);
     for i in xrange(len(url_list)):
         url = url_list[i];
 
