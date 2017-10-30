@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 ##~---------------------------------------------------------------------------##
 ##                     _______  _______  _______  _     _                     ##
 ##                    |   _   ||       ||       || | _ | |                    ##
@@ -9,9 +7,9 @@
 ##                    |   _   ||     |_ |       ||   _   |                    ##
 ##                    |__| |__||_______||_______||__| |__|                    ##
 ##                             www.amazingcow.com                             ##
-##  File      : instacrawler.py                                               ##
+##  File      : db.py                                                         ##
 ##  Project   : instacrawler                                                  ##
-##  Date      : Sep 21, 2017                                                  ##
+##  Date      : Sep 23, 2017                                                  ##
 ##  License   : GPLv3                                                         ##
 ##  Author    : n2omatt <n2omatt@amazingcow.com>                              ##
 ##  Copyright : AmazingCow - 2017                                             ##
@@ -20,85 +18,95 @@
 ##                                                                            ##
 ##---------------------------------------------------------------------------~##
 
-## sudo apt-get -y install python3-pip python3-dev build-essential libssl-dev libffi-dev xvfb
-## pip3 install --upgrade pip
-## pip install selenium==3.0.0
-## pip install pyvirtualdisplay==0.2.1
-
-## wget "http://chromedriver.storage.googleapis.com/2.25/chromedriver_linux64.zip"
-## unzip chromedriver_linux64.zip
-
-
 ################################################################################
 ## Imports                                                                    ##
 ################################################################################
-import threading;
-
-import random;
+## Python
+import sqlite3;
+import pdb;
 ## instacrawler
-from scrap import *;
-
-################################################################################
-## Globals                                                                    ##
-################################################################################
-class Globals:
-    users     = [];
-    threads   = [];
-    threads_max_count = 8;
-
+from config import *;
+from log    import *;
 
 
 ################################################################################
-## Download Funtions                                                          ##
+## Private Vars                                                               ##
 ################################################################################
-
-
-################################################################################
-## Thread Functions                                                           ##
-################################################################################
-def make_thread():
-    # lock = threading.Lock();
-    # with lock:
-    if(len(Globals.users) == 0):
-        return None;
-
-    name = Globals.users[0];
-    del Globals.users[0];
-
-    return threading.Thread(
-        name   =  name,
-        target = scrap,
-        args   = (name,)
-    );
-
-def make_threads():
-    ## COWNOTE(n2omatt): As we can see... I don't "know" multi thread stuff yet..
-    lock = threading.Lock();
-    with lock:
-        to_delete = [];
-        for i in range(len(Globals.threads)):
-            t = Globals.threads[i];
-
-            if(not t.is_alive()):
-                to_delete.append(i);
-
-        for i in to_delete:
-            del Globals.threads[i];
-
-        for i in range(Globals.threads_max_count - len(Globals.threads)):
-            t = make_thread();
-            if(t is None):
-                break;
-
-            Globals.threads.append(t);
-
-            t.start();
+_db_created = False;
 
 
 ################################################################################
-## Script                                                                     ##
+## Public Functions                                                           ##
 ################################################################################
-def main():
-    scrap_scrap("n2omatt");
+def db_exists_url(url):
+    if(config.ignore_db):
+        return False;
 
-main();
+    log.D("[DB] Check if url exists\n\tURL: {0}", url);
+    rows = _query("SELECT * FROM MediaPageUrls WHERE url = ?", url);
+
+    return len(rows) != 0;
+
+def db_insert_media_url(url):
+    if(config.ignore_db):
+        return;
+
+    log.D("[DB] Inserting media.\n\tURL: {0}", url);
+    _execute("INSERT INTO MediaPageUrls (url) VALUES (?)", url);
+
+
+################################################################################
+## Private Functions                                                          ##
+################################################################################
+def _open_db():
+    if(config.ignore_db):
+        return;
+
+    con = sqlite3.connect(config.db_name);
+    if(not _db_created):
+        _create_db(con);
+
+    return con;
+
+def _create_db(con):
+    global _db_created;
+
+    if(_db_created):
+        return;
+
+    _db_created = True;
+    try:
+        log.D("[DB] Creating DB....");
+        _execute("CREATE TABLE MediaPageUrls (id INTEGER PRIMARY KEY, url TEXT)");
+
+    except:
+        log.D("[DB] DB already exists - Skipping....");
+
+
+def _query(stmt, *args):
+    con = _open_db();
+    with con:
+        cur = con.cursor();
+        cur.execute(stmt, args);
+        rows = cur.fetchall();
+
+        return rows;
+
+def _execute(stmt, *args):
+    con = _open_db();
+    with con:
+        cur = con.cursor();
+        cur.execute(stmt, args);
+        con.commit();
+
+
+################################################################################
+## "Test"                                                                     ##
+################################################################################
+if __name__ == '__main__':
+    val = db_exists_url("my url");
+    print(val);
+
+    db_insert_media_url("my url");
+    val = db_exists_url("my url");
+    print(val);
