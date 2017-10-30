@@ -1,5 +1,24 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+##~---------------------------------------------------------------------------##
+##                     _______  _______  _______  _     _                     ##
+##                    |   _   ||       ||       || | _ | |                    ##
+##                    |  |_|  ||       ||   _   || || || |                    ##
+##                    |       ||       ||  | |  ||       |                    ##
+##                    |       ||      _||  |_|  ||       |                    ##
+##                    |   _   ||     |_ |       ||   _   |                    ##
+##                    |__| |__||_______||_______||__| |__|                    ##
+##                             www.amazingcow.com                             ##
+##  File      : instacrawler.py                                               ##
+##  Project   : instacrawler                                                  ##
+##  Date      : Sep 21, 2017                                                  ##
+##  License   : GPLv3                                                         ##
+##  Author    : n2omatt <n2omatt@amazingcow.com>                              ##
+##  Copyright : AmazingCow - 2017                                             ##
+##                                                                            ##
+##  Description :                                                             ##
+##                                                                            ##
+##---------------------------------------------------------------------------~##
 
 ## sudo apt-get -y install python3-pip python3-dev build-essential libssl-dev libffi-dev xvfb
 ## pip3 install --upgrade pip
