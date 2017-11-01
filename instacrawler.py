@@ -99,6 +99,12 @@ def make_threads():
 ## Script                                                                     ##
 ################################################################################
 def main():
+    _display = Display(visible=0, size=(800, 600));
+    _display.start();
+
     scrap_scrap("n2omatt");
+
+    _display.stop();
+
 
 main();
