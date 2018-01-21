@@ -19,6 +19,6 @@
 ##---------------------------------------------------------------------------~##
 
 class config:
-    load_all_medias = False;
+    load_all_medias = True;
     ignore_db       = False;
     db_name         = "instacrawler_default.db";
